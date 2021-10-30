@@ -1,4 +1,6 @@
 <?php
+
+print_r('ana');
 /**
  * WHMCS QuickPay Payment Gateway Module
  *
