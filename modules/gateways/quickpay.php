@@ -439,6 +439,11 @@ function helper_create_subscription($params)
     return $paymentLink;
 }
 
+function helper_update_subscription($params)
+{
+
+}
+
 /**
  * Create payment link
  *
