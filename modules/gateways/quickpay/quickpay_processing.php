@@ -8,6 +8,7 @@ const MAX_CHECKS = 5;
 const DELAY = 1;
 
 /* GET params */
+
 $invoice_id = (int) $whmcs->get_req_var("id");
 $redirect_url = rawurldecode($whmcs->get_req_var("url"));
 /* If invoice id or redirect url are empty, redirect to root */

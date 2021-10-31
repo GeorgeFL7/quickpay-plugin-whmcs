@@ -441,7 +441,25 @@ function helper_create_subscription($params)
 
 function helper_update_subscription($params)
 {
+    $request = ['id' => $params['subscriptionID']];
 
+    /** Gateway cancel request */
+    $response = helper_quickpay_request($params['apikey'], sprintf('subscriptions/%s', $params['subscriptionid']), $request, 'PATCH');
+    $processing_url = $response ->link->continue_url;
+    $processing_url = str_replace(strrchr($processing_url,"="), "", $processing_url);
+    
+    $processing_url .= '=' . rawurlencode($params['continue_url']);
+
+    $request = [
+        "id" => $response->id,
+        "amount" => $response->link->amount,
+        "continue_url" => $processing_url,
+        "cancel_url" => $processing_url,
+        "callback_url" => $response->link->callback_url,
+        "isSubscriptionUpdate" => "TRUE"
+    ];
+
+    return(helper_quickpay_request($params['apikey'], sprintf('subscriptions/%s/link', $params['subscriptionid']), $request, 'PUT'));    
 }
 
 /**
@@ -457,7 +475,7 @@ function helper_update_subscription($params)
 function helper_create_payment_link($paymentId, $params, $type = 'payment')
 {
     $paymentlink = null;
-    $params['systemurl'] = "http://9999-2a02-2f0e-208-1100-9c64-2a47-1b3f-67ea.ngrok.io/";
+    $params['systemurl'] = "http://5987-2a02-2f0e-208-1100-9c64-2a47-1b3f-67ea.ngrok.io/";
     /** Quickpay API key */
     $apiKey = $params['apikey'];
 
