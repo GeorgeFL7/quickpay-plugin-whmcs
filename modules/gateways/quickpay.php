@@ -22,6 +22,7 @@
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 require_once 'quickpay/quickpay_countries.php';
+include 'quickpay/quickpay_clientareahook.php';
 
 if (!defined("WHMCS")) {
     die("This file cannot be accessed directly");
@@ -37,6 +38,8 @@ if (!defined("WHMCS")) {
  *
  * @return array
  */
+
+
 function quickpay_MetaData()
 {
     return [
@@ -415,6 +418,7 @@ function helper_create_subscription($params)
         $request = helper_quickpay_request_params($params);
         /** Create gateway subscription */
         $payment = helper_quickpay_request($params['apikey'], '/subscriptions', $request, 'POST');
+       // error_log("helper_create_subscription" . $params);
 
         /**
          * Log Transaction.
@@ -448,9 +452,11 @@ function helper_create_subscription($params)
 function helper_create_payment_link($paymentId, $params, $type = 'payment')
 {
     $paymentlink = null;
-
+    $params['systemurl'] = "http://9999-2a02-2f0e-208-1100-9c64-2a47-1b3f-67ea.ngrok.io/";
     /** Quickpay API key */
     $apiKey = $params['apikey'];
+
+    error_log($type);
 
     /** Create return page URL. If quickpay_custom_thankyou_url field is empty set return URL to default value */
     $return_url = (empty($params['quickpay_custom_thankyou_url'])) ? ($params['returnurl']) : ($params['systemurl'] . $params['quickpay_custom_thankyou_url']);

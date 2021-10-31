@@ -1,6 +1,4 @@
 <?php
-
-print_r('ana');
 /**
  * WHMCS QuickPay Payment Gateway Module
  *
@@ -76,6 +74,7 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
      * @param string $gatewayName Gateway Name
      */
     $invoiceid = checkCbInvoiceID($invoiceid, $gateway["name"]);
+    
 
     /**
      * Check Callback Transaction ID.
@@ -91,7 +90,6 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
 
     /** If request is accepted, authorized and qp status is ok*/
     if ($request->accepted && (('authorize' == $operationType) || ('recurring' == $operationType) || ('capture' == $operationType)) && ("20000" == $operation->qp_status_code)) {
-
         /** Add transaction to Invoice */
         if ((("Subscription" == $orderType) && ('authorize' != $operationType)) || ("Subscription" != $orderType)) {
             /** Admin username needed for api commands */
@@ -105,11 +103,9 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
                     'newitemamount' => array($fee),
                     'newitemtaxed' => array("0")
                 ];
-
                 /** Update invoice request */
                 localAPI("updateinvoice", $values, $adminuser);
             }
-
             if (
                 //  (('authorize' == $operationType) && ("Subscription" != $orderType)) ||
                  ('recurring' == $operationType)
@@ -132,7 +128,7 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
                 ];
 
                 /** Update invoice request */
-                localAPI("updateinvoice", $updateValues, $adminuser);
+                error_log(localAPI("updateinvoice", $updateValues, $adminuser));
 
                 /** Api request parameters */
                 $values = [
