@@ -47,7 +47,6 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
     $transid = $request->id;
     $invoiceid = $request->order_id;
     
-
     /** Strip prefix if any*/
     if (isset($gateway['prefix'])) {
         $invoiceid = explode('_',substr($invoiceid, strlen($gateway['prefix'])))[0];
@@ -176,7 +175,6 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
                     require_once __DIR__ . '/../../../modules/gateways/quickpay.php';
 
 
-
                     if($_GET['isUpdate'] == "0")
                     {
                          /** SET subscription id in tblhosting if is empty, in order to enable autobiling and cancel methods*/
@@ -213,7 +211,6 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
                     {
                         if($_GET['isUpdate'] == "1")
                         {
-
                             //Get the old subscription id
                             $result = select_query("tblhosting", "id, subscriptionid", ["id" => $recurringData['primaryserviceid']]);
                             $data = mysql_fetch_array($result);  

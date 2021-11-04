@@ -9,7 +9,6 @@ const DELAY = 1;
 /* GET params */
 
 $invoice_id = (int) $whmcs->get_req_var("id");
-error_log($whmcs->get_req_var("url"));
 $redirect_url = rawurldecode($whmcs->get_req_var("url"));
 /* If invoice id or redirect url are empty, redirect to root */
 if (empty($invoice_id) || empty($redirect_url)) {
@@ -40,6 +39,5 @@ do {
 } while ('0' == $quickpay_transaction['paid'] && $checks > 0);
 
 /* Redirect to return url */
-error_log("processing " . $redirect_url);
 header("Location: ".$redirect_url);
 exit();

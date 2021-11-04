@@ -5,17 +5,35 @@
 add_hook('ClientAreaProductDetailsOutput', 1, function($service) {
     if($service['service']['product']['paytype'] == 'recurring')
     {
-        return '<form method="post" id="changeSubscriptionForm">
-        <input type="hidden" id="changeCardFlag" name="changeCardFlag" value="TRUE">
-        </form>
-        <button type="submit" form="changeSubscriptionForm" value="Submit">Change card details</button>';    
+        if(isset($_GET["isCardUpdate"]))
+        {
+            //get card update status
+            $query_quickpay_transaction = select_query("quickpay_transactions", "id, transaction_id, paid", ["transaction_id" => $service['service']['subscriptionid']], "id ASC");
+            $quickpay_transaction = mysql_fetch_array($query_quickpay_transaction);
+            $card_update_status_message = "Your card has been declined, please try again!";
+            if($quickpay_transaction['paid'] == '1')
+            {
+                $card_update_status_message = "Your card has been succesfully changed for this subscription";
+            }
+
+            return '<div>'.$card_update_status_message.'</div><br><form method="post" id="changeSubscriptionForm">
+            <input type="hidden" id="changeCardFlag" name="changeCardFlag" value="TRUE">
+            </form>
+            <button type="submit" form="changeSubscriptionForm" value="Submit">Change card details</button>';   
+        }
+        else
+        {
+            return '<form method="post" id="changeSubscriptionForm">
+            <input type="hidden" id="changeCardFlag" name="changeCardFlag" value="TRUE">
+            </form>
+            <button type="submit" form="changeSubscriptionForm" value="Submit">Change card details</button>';   
+        }
     }
     
     
 });
 
 add_hook('ClientAreaProductDetails', 1, function($vars) {
-   require_once __DIR__ . '/../../init.php';
    require_once __DIR__ . '/../gatewayfunctions.php';
    if(isset($_POST["changeCardFlag"]))
    {
@@ -34,11 +52,10 @@ function handle_change_card_request($subscriptionId, $serviceId)
         "autocapture" => $gateway['autocapture'],
         "apikey" => $gateway['apikey'],
         "subscriptionid" => $subscriptionId,
-        "continue_url" => getServerUrl()."/clientarea.php?action=productdetails&id=".$serviceId
+        "continue_url" => getServerUrl()."/clientarea.php?action=productdetails&id=".$serviceId."&isCardUpdate=1"
     ];
     require_once __DIR__ . '/../../modules/gateways/quickpay.php';
     $url = helper_update_subscription($params)->url;
-    error_log("hook" . $params['continue_url']);
     header("Location:" . $url);
 
 }

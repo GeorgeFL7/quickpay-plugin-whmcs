@@ -413,11 +413,9 @@ function helper_create_subscription($params)
         $data = mysql_fetch_array($result);
         $activeSubscriptionId = $data['subscriptionid'];
     }
-    error_log('bbbbbb');
     /** Check if active subscription */
     if (isset($activeSubscriptionId) && !empty($activeSubscriptionId)) {
         /** Do subscription recurring payment - null payment link expected*/
-        error_log('aaaaa');
         $paymentLink = helper_create_payment_link($activeSubscriptionId, $params, 'recurring');
     } else {
         $request = helper_quickpay_request_params($params);
@@ -452,7 +450,7 @@ function helper_update_subscription($params)
     $order_id_arr = explode("-", $oldSubscription->order_id);
     if ($order_id_arr[1] !=NULL)
     {
-        $oldSubscription->order_id = $order_id_arr[0] . '-'.  strval(((int)$order_id_arr[1])+1);
+        $oldSubscription->order_id = $order_id_arr[0] . '-'.  strval(((int)$order_id_arr[1])+5);
     }
     else
     {
@@ -506,17 +504,18 @@ function helper_update_subscription($params)
 
     //Create the new subscription
     $newSubscription = helper_quickpay_request($params['apikey'], '/subscriptions', $newRequest, 'POST'); 
-
-    $processing_url = $oldSubscription ->link->continue_url;
-
-    $processing_url = str_replace(strrchr($processing_url,"="), "", $processing_url);
     
-    $processing_url .= '=' . rawurlencode($params['continue_url']);
+    $processing_url = $params['continue_url'];
+    $callback_url = '';
 
-    error_log("main " . $processing_url);
-
-    $callback_url = str_replace("isUpdate=0","isUpdate=1",$oldSubscription->link->callback_url);
-
+    if(!str_contains($oldSubscription->link->callback_url,"?isUpdate="))
+    {
+        $callback_url = $oldSubscription->link->callback_url . "?isUpdate=1";
+    }
+    else
+    {
+        $callback_url = str_replace("?isUpdate=0","?isUpdate=1",$oldSubscription->link->callback_url);
+    }
 
     $request = [
         "amount" => $oldSubscription->link->amount,
@@ -593,7 +592,7 @@ function helper_create_payment_link($paymentId, $params, $type = 'payment')
 {
     $paymentlink = null;
 
-    $params['systemurl'] = "http://3961-2a02-2f0e-315-400-e541-3da1-f441-3891.ngrok.io/";
+    $params['systemurl'] = "http://a699-2a02-2f0e-315-400-e541-3da1-f441-3891.ngrok.io/";
     /** Quickpay API key */
     $apiKey = $params['apikey'];
 
