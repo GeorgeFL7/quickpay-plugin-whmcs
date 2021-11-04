@@ -7,27 +7,28 @@ add_hook('ClientAreaProductDetailsOutput', 1, function($service) {
     {
         if(isset($_GET["isCardUpdate"]))
         {
-            //get card update status
-            $query_quickpay_transaction = select_query("quickpay_transactions", "id, transaction_id, paid", ["transaction_id" => $service['service']['subscriptionid']], "id ASC");
-            $quickpay_transaction = mysql_fetch_array($query_quickpay_transaction);
-            $card_update_status_message = "Your card has been declined, please try again!";
-            if($quickpay_transaction['paid'] == '1')
+            if(isset($_GET["updatedId"]))
             {
-                $card_update_status_message = "Your card has been succesfully changed for this subscription";
-            }
+                //get card update status
+                $query_quickpay_transaction = select_query("quickpay_transactions", "id, transaction_id, paid", ["transaction_id" => $_GET["updateId"]], "id DESC");
+                $quickpay_transaction = mysql_fetch_array($query_quickpay_transaction);
+                $card_update_status_message = "Your card has been declined, please try again!";
+                if($quickpay_transaction['paid'] == '1')
+                {
+                    $card_update_status_message = "Your card has been succesfully changed for this subscription";
+                }
 
-            return '<div>'.$card_update_status_message.'</div><br><form method="post" id="changeSubscriptionForm">
-            <input type="hidden" id="changeCardFlag" name="changeCardFlag" value="TRUE">
-            </form>
-            <button type="submit" form="changeSubscriptionForm" value="Submit">Change card details</button>';   
+                return '<div>'.$card_update_status_message.'</div><br><form method="post" id="changeSubscriptionForm">
+                <input type="hidden" id="changeCardFlag" name="changeCardFlag" value="TRUE">
+                </form>
+                <button type="submit" form="changeSubscriptionForm" value="Submit">Change card details</button>';   
+            }
         }
-        else
-        {
-            return '<form method="post" id="changeSubscriptionForm">
-            <input type="hidden" id="changeCardFlag" name="changeCardFlag" value="TRUE">
-            </form>
-            <button type="submit" form="changeSubscriptionForm" value="Submit">Change card details</button>';   
-        }
+
+        return '<form method="post" id="changeSubscriptionForm">
+         <input type="hidden" id="changeCardFlag" name="changeCardFlag" value="TRUE">
+        </form>
+        <button type="submit" form="changeSubscriptionForm" value="Submit">Change card details</button>';   
     }
     
     

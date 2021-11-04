@@ -446,6 +446,22 @@ function helper_update_subscription($params)
     //Get old subscription
     $oldSubscription = helper_quickpay_request($params['apikey'], sprintf('subscriptions/%s', $params['subscriptionid']), NULL, 'GET');
 
+    //Get the invoice id associated with the old subscription
+    $result = select_query("quickpay_transactions", "invoice_id" , ["transaction_id" => $oldSubscription->id]);
+    $data = mysql_fetch_array($result);
+    $invoice_id = $data['invoice_id'];
+
+    //Get all the subscriptions associated with the invoice ids
+    $result = select_query("quickpay_transactions", "transaction_id", ["invoice_id" => $invoice_id], "id DESC");
+    $data = mysql_fetch_array($result);
+    if($oldSubscription->id != data['transaction_id'])
+    {
+        //The subscription associated with the in the tblhosting is not the latest so overwrite it
+        $oldSubscription = helper_quickpay_request($params['apikey'], sprintf('subscriptions/%s', $data['transaction_id']), NULL, 'GET');
+
+    }
+
+ 
     //Update order id, so it is unique
     $order_id_arr = explode("-", $oldSubscription->order_id);
     if ($order_id_arr[1] !=NULL)
@@ -479,9 +495,6 @@ function helper_update_subscription($params)
         'email' =>  $oldSubscription->email
     ];
 
-    $result = select_query("quickpay_transactions", "invoice_id", ["transaction_id" => $oldSubscription->id]);
-    $data = mysql_fetch_array($result);
-    $invoice_id = $data['invoice_id'];
 
     /** Extract the invoice items details. */
     $invoice = localAPI(/**command*/'GetInvoice', /**postData*/['invoiceid' => $invoice_id]);
@@ -505,7 +518,7 @@ function helper_update_subscription($params)
     //Create the new subscription
     $newSubscription = helper_quickpay_request($params['apikey'], '/subscriptions', $newRequest, 'POST'); 
     
-    $processing_url = $params['continue_url'];
+    $processing_url = $params['continue_url']."&updatedId=".$newSubscription->id;
     $callback_url = '';
 
     if(!str_contains($oldSubscription->link->callback_url,"?isUpdate="))
