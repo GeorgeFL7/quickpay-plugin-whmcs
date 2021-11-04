@@ -16,7 +16,6 @@ add_hook('ClientAreaProductDetailsOutput', 1, function($service) {
 add_hook('ClientAreaProductDetails', 1, function($vars) {
    if(isset($_POST["changeCardFlag"]))
    {
-
        handle_change_card_request($vars['service']['subscriptionid'], $vars['service']['id']);
    }
 });
@@ -34,8 +33,9 @@ function handle_change_card_request($subscriptionId, $serviceId)
         "continue_url" => \WHMCS\Utility\Environment\WebHelper::getBaseUrl()."/clientarea.php?action=productdetails&id=".$serviceId
     ];
     require_once __DIR__ . '/../../modules/gateways/quickpay.php';
-
-    header("Location:".helper_update_subscription($params)->url);
+    $url = helper_update_subscription($params)->url;
+    error_log($url);
+    header("Location:" . $url);
 
 }
 
