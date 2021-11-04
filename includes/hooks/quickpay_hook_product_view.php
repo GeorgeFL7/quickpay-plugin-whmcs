@@ -11,9 +11,12 @@ add_hook('ClientAreaProductDetailsOutput', 1, function($service) {
         <button type="submit" form="changeSubscriptionForm" value="Submit">Change card details</button>';    
     }
     
+    
 });
 
 add_hook('ClientAreaProductDetails', 1, function($vars) {
+   require_once __DIR__ . '/../../init.php';
+   require_once __DIR__ . '/../gatewayfunctions.php';
    if(isset($_POST["changeCardFlag"]))
    {
        handle_change_card_request($vars['service']['subscriptionid'], $vars['service']['id']);
@@ -30,8 +33,9 @@ function handle_change_card_request($subscriptionId, $serviceId)
         "autocapture" => $gateway['autocapture'],
         "apikey" => $gateway['apikey'],
         "subscriptionid" => $subscriptionId,
-        "continue_url" => \WHMCS\Utility\Environment\WebHelper::getBaseUrl()."/clientarea.php?action=productdetails&id=".$serviceId
+        "continue_url" => $_SERVER['SERVER_NAME']."/clientarea.php?action=productdetails&id=".$serviceId
     ];
+    error_log($params['continue_url']);
     require_once __DIR__ . '/../../modules/gateways/quickpay.php';
     $url = helper_update_subscription($params)->url;
     error_log($url);

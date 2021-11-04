@@ -46,12 +46,19 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
     $operationType = $operation->type;
     $transid = $request->id;
     $invoiceid = $request->order_id;
+    
 
     /** Strip prefix if any*/
     if (isset($gateway['prefix'])) {
         $invoiceid = explode('_',substr($invoiceid, strlen($gateway['prefix'])))[0];
     }
+    $invoiceid_arr = explode("-", $invoiceid);
+    if($invoiceid_arr[1] != NULL)
+    {
+        $invoiceid = $invoiceid_arr[0];
+    }
 
+    error_log(json_encode($request));
     /** Convert amount to decimal type */
     $amount = ($operation->amount / 100.0);
 
@@ -170,43 +177,61 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
                     require_once __DIR__ . '/../../../modules/gateways/quickpay.php';
 
 
-                    /** SET subscription id in tblhosting if is empty, in order to enable autobiling and cancel methods*/
-                    update_query("tblhosting", ["subscriptionid" => $transid], ["id" => $recurringData['primaryserviceid'], "subscriptionid" => '']);
 
-                    if(!isset($request->isSubscriptionUpdate))
+                    if($_GET['isUpdate'] == "0")
                     {
+                         /** SET subscription id in tblhosting if is empty, in order to enable autobiling and cancel methods*/
+                        update_query("tblhosting", ["subscriptionid" => $transid], ["id" => $recurringData['primaryserviceid'], "subscriptionid" => '']);
 
-                    
-                        /** Payment link from response */
+                        
+                            /** Payment link from response */
                         $linkArray = json_decode(json_encode($request->link), true);
 
-                        /** Recurring payment parameters */
+                            /** Recurring payment parameters */
                         $params = [
-                            "amount" => number_format(($linkArray['amount']/100.0), 2, '.', ''), /** Convert amount to decimal */
-                            "returnurl" => $linkArray['continue_url'],
-                            "callback_url" => $linkArray['callback_url'],
-                            "clientdetails" => ['email' => $linkArray['customer_email']],
-                            "payment_methods" => $linkArray['payment_methods'],
-                            "language" => $linkArray['language'],
-                            "autocapture" => $gateway['autocapture'],
-                            "autofee" => $gateway['autofee'],
-                            "quickpay_branding_id" => $gateway['quickpay_branding_id'],
-                            "quickpay_google_analytics_tracking_id" => $gateway['quickpay_google_analytics_tracking_id'],
-                            "quickpay_google_analytics_client_id" => $gateway['quickpay_google_analytics_client_id'],
-                            "apikey" => $gateway['apikey'],
-                            "invoiceid" => $invoiceid,
-                            "prefix" => $gateway['prefix'],
-                            "description" => $request->description
-                        ];
+                                "amount" => number_format(($linkArray['amount']/100.0), 2, '.', ''), /** Convert amount to decimal */
+                                "returnurl" => $linkArray['continue_url'],
+                                "callback_url" => $linkArray['callback_url'],
+                                "clientdetails" => ['email' => $linkArray['customer_email']],
+                                "payment_methods" => $linkArray['payment_methods'],
+                                "language" => $linkArray['language'],
+                                "autocapture" => $gateway['autocapture'],
+                                "autofee" => $gateway['autofee'],
+                                "quickpay_branding_id" => $gateway['quickpay_branding_id'],
+                                "quickpay_google_analytics_tracking_id" => $gateway['quickpay_google_analytics_tracking_id'],
+                                "quickpay_google_analytics_client_id" => $gateway['quickpay_google_analytics_client_id'],
+                                "apikey" => $gateway['apikey'],
+                                "invoiceid" => $invoiceid,
+                                "prefix" => $gateway['prefix'],
+                                "description" => $request->description
+                            ];
 
-                        /** Trigger recurring payment */
+                            /** Trigger recurring payment */
                         helper_create_payment_link($transid/** Subscription ID */, $params, 'recurring');
 
                     }
+                    else
+                    {
+                        if($_GET['isUpdate'] == "1")
+                        {
 
+                            //Get the old subscription id
+                            $result = select_query("tblhosting", "id, subscriptionid", ["id" => $recurringData['primaryserviceid']]);
+                            $data = mysql_fetch_array($result);  
+                            $params = [
+                                'subscriptionID' => $data['subscriptionid'],
+                                'apikey' => $gateway['apikey']];
 
+                            //Cancel the subscripition
+                            quickpay_cancelSubscription($params);
+                            //Update the subscription id
+                            update_query("tblhosting", ["subscriptionid" => $transid], ["id" => $recurringData['primaryserviceid']]);
+
+                        }
+                    }
 
                     /** Paid 1 on subscription parent record = authorized */
+
                     full_query("UPDATE quickpay_transactions SET paid = '1' WHERE transaction_id = '" . (int)$transid . "'");
                 } else {
                     /**  If recurring payment succeeded set transaction as paid */
