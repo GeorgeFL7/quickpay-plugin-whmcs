@@ -58,7 +58,6 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
         $invoiceid = $invoiceid_arr[0];
     }
 
-    error_log(json_encode($request));
     /** Convert amount to decimal type */
     $amount = ($operation->amount / 100.0);
 
@@ -137,7 +136,7 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
                 ];
 
                 /** Update invoice request */
-                error_log(localAPI("updateinvoice", $updateValues, $adminuser));
+                localAPI("updateinvoice", $updateValues, $adminuser);
 
                 /** Api request parameters */
                 $values = [

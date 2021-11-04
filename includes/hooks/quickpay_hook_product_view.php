@@ -25,6 +25,7 @@ add_hook('ClientAreaProductDetails', 1, function($vars) {
 
 function handle_change_card_request($subscriptionId, $serviceId)
 {
+
     require_once __DIR__ . '/../../init.php';
     require_once __DIR__ . '/../gatewayfunctions.php';
     $gatewayModuleName = 'quickpay';
@@ -33,14 +34,23 @@ function handle_change_card_request($subscriptionId, $serviceId)
         "autocapture" => $gateway['autocapture'],
         "apikey" => $gateway['apikey'],
         "subscriptionid" => $subscriptionId,
-        "continue_url" => $_SERVER['SERVER_NAME']."/clientarea.php?action=productdetails&id=".$serviceId
+        "continue_url" => getServerUrl()."/clientarea.php?action=productdetails&id=".$serviceId
     ];
-    error_log($params['continue_url']);
     require_once __DIR__ . '/../../modules/gateways/quickpay.php';
     $url = helper_update_subscription($params)->url;
-    error_log($url);
+    error_log("hook" . $params['continue_url']);
     header("Location:" . $url);
 
+}
+
+function getServerUrl(){
+    if(isset($_SERVER['HTTPS'])){
+        $protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https" : "http";
+    }
+    else{
+        $protocol = 'http';
+    }
+    return $protocol . "://" . $_SERVER['SERVER_NAME'];
 }
 
 ?>

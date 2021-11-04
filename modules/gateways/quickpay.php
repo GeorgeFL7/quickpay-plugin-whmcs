@@ -283,13 +283,11 @@ function quickpay_cancelSubscription($params)
     /** Gateway request parameters */
     $request = ['id' => $params['subscriptionID']];
 
-    error_log(json_encode($request));
 
 
     /** Gateway cancel request */
     $response = helper_quickpay_request($params['apikey'], sprintf('subscriptions/%s/cancel', $params['subscriptionID']), $request, 'POST');
 
-    error_log(json_encode($response));
 
     /** Fail due to a connection issue */
     if (!isset($response)) {
@@ -415,16 +413,16 @@ function helper_create_subscription($params)
         $data = mysql_fetch_array($result);
         $activeSubscriptionId = $data['subscriptionid'];
     }
-
+    error_log('bbbbbb');
     /** Check if active subscription */
     if (isset($activeSubscriptionId) && !empty($activeSubscriptionId)) {
         /** Do subscription recurring payment - null payment link expected*/
+        error_log('aaaaa');
         $paymentLink = helper_create_payment_link($activeSubscriptionId, $params, 'recurring');
     } else {
         $request = helper_quickpay_request_params($params);
         /** Create gateway subscription */
         $payment = helper_quickpay_request($params['apikey'], '/subscriptions', $request, 'POST');
-       // error_log("helper_create_subscription" . $params);
 
         /**
          * Log Transaction.
@@ -458,9 +456,8 @@ function helper_update_subscription($params)
     }
     else
     {
-        $oldSubscription->order_id .=  '-8';
+        $oldSubscription->order_id .=  '-2';
     }
-
 
     //Construct the subscripion parmeters
     $newRequest = [
@@ -509,13 +506,14 @@ function helper_update_subscription($params)
 
     //Create the new subscription
     $newSubscription = helper_quickpay_request($params['apikey'], '/subscriptions', $newRequest, 'POST'); 
-    // error_log("newSubscriptionid " . json_encode($newSubscription));
 
     $processing_url = $oldSubscription ->link->continue_url;
 
     $processing_url = str_replace(strrchr($processing_url,"="), "", $processing_url);
     
     $processing_url .= '=' . rawurlencode($params['continue_url']);
+
+    error_log("main " . $processing_url);
 
     $callback_url = str_replace("isUpdate=0","isUpdate=1",$oldSubscription->link->callback_url);
 
@@ -539,6 +537,8 @@ function helper_update_subscription($params)
         "invoice_address_selection" => $oldSubscription->link->invoice_address_selection,
         "shipping_address_selection" => $oldSubscription->link->shipping_address_selection
     ];
+
+
     $payment_link = helper_quickpay_request($params['apikey'], sprintf('subscriptions/%s/link', $newSubscription->id), $request, 'PUT');
 
     /** Save transaction data to custom table */
@@ -577,7 +577,6 @@ function helper_update_subscription($params)
     }    
 
     return $payment_link;
-    //return $payment_link;    
 }
 
 /**
@@ -593,7 +592,8 @@ function helper_update_subscription($params)
 function helper_create_payment_link($paymentId, $params, $type = 'payment')
 {
     $paymentlink = null;
-    $params['systemurl'] = "http://6d0e-2a02-2f0e-315-400-e541-3da1-f441-3891.ngrok.io/";
+
+    $params['systemurl'] = "http://3961-2a02-2f0e-315-400-e541-3da1-f441-3891.ngrok.io/";
     /** Quickpay API key */
     $apiKey = $params['apikey'];
 
