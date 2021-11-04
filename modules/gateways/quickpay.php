@@ -450,7 +450,7 @@ function helper_update_subscription($params)
     $order_id_arr = explode("-", $oldSubscription->order_id);
     if ($order_id_arr[1] !=NULL)
     {
-        $oldSubscription->order_id = $order_id_arr[0] . '-'.  strval(((int)$order_id_arr[1])+5);
+        $oldSubscription->order_id = $order_id_arr[0] . '-'.  strval(((int)$order_id_arr[1])+1);
     }
     else
     {
