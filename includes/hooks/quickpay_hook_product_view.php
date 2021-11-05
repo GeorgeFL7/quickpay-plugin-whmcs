@@ -14,7 +14,7 @@ add_hook('ClientAreaProductDetailsOutput', 1, function ($service) {
                     $card_update_status_message = "Your card has been succesfully chWanged for this subscription";
                     $status = TRUE;
                 }
-                return dispay_change_payment($card_update_status_message, $status, $service['service']['paymentmethod']);
+                return dispay_change_payment($card_update_status_messzage, $status, $service['service']['paymentmethod']);
             }
         }
 
@@ -35,7 +35,7 @@ function dispay_change_payment($message, $success, $paymentmethod)
     $output = '<div class="card"><div class="card-body"><div class="row">';
 
     if (!empty($message)) {
-        $output .= '<div class="col-12">';
+         $output .= '<div class="col-12">';
         if ($success) {
             $output .= '
                 <div class="alert alert-success alert-dismissible">
