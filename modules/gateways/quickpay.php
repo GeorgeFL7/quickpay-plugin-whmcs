@@ -442,6 +442,8 @@ function helper_create_subscription($params)
 }
 
 /** Update the subscription if the users requests to change card
+ * Subscription payment method update
+ * 
  * @param array 
  *
  * @return string - the new payment link
@@ -449,21 +451,22 @@ function helper_create_subscription($params)
 
 function helper_update_subscription($params)
 {
-    //Get old subscription
+    /** Get the old subscription */
     $oldSubscription = helper_quickpay_request($params['apikey'], sprintf('subscriptions/%s', $params['subscriptionid']), NULL, 'GET');
 
-    //Get the invoice id associated with the old subscription
+    /** Get invoice id associated with the old subscription */
     $result = select_query("quickpay_transactions", "invoice_id" , ["transaction_id" => $oldSubscription->id]);
     $data = mysql_fetch_array($result);
     $invoice_id = $data['invoice_id'];
 
-    //Get all the subscriptions associated with the invoice ids
+    /** Get all transactions associated with the invoice id */
     $result = select_query("quickpay_transactions", "transaction_id, payment_link", ["invoice_id" => $invoice_id], "id DESC");
     $transaction_id = 0;
     while($data = mysql_fetch_array($result)){
         
         if(!empty($data['payment_link']))
         {
+            /** Get the latest subscription id associated with the invoice id */
             $transaction_id = $data['transaction_id'];
             break;
         }
@@ -471,14 +474,14 @@ function helper_update_subscription($params)
 
     if($oldSubscription->id != $transaction_id)
     {
-        //The subscription associated with the in the tblhosting is not the latest so overwrite it
+        /** The subscription associated with the in the tblhosting is not the latest so overwrite it */
         $oldSubscription = helper_quickpay_request($params['apikey'], sprintf('subscriptions/%s', $transaction_id), NULL, 'GET');
     }
 
     if($oldSubscription->id == NULL){
         throw new Exception('Failed to change payment method, please try again later'); 
     }
-    //Update order id, so it is unique *****TODO:Get the last element from explode
+    /** Update order id, so it is unique */
     $order_id_arr = explode("-", $oldSubscription->order_id);
     if ($order_id_arr[1] !=NULL)
     {
@@ -489,7 +492,7 @@ function helper_update_subscription($params)
         $oldSubscription->order_id .=  '-2';
     }
 
-    //Construct the subscripion parmeters
+    /** Construct the Subscripion Parmeters */
     $newRequest = [
         'currency' => $oldSubscription->currency,
         'order_id' => $oldSubscription->order_id,
@@ -498,7 +501,7 @@ function helper_update_subscription($params)
     ];
     
 
-    /** Invoice Parameters */
+    /** Construct the Invoice Parameters */
     $newRequest['invoice_address'] = [
         'name' =>  $oldSubscription->name,
         'company_name' => $oldSubscription->company_name,
@@ -515,7 +518,7 @@ function helper_update_subscription($params)
     /** Extract the invoice items details. */
     $invoice = localAPI(/**command*/'GetInvoice', /**postData*/['invoiceid' => $invoice_id]);
 
-        /** Cart Items Parameters */
+    /** Cart Items Parameters */
     $newRequest['basket'] = [];
     $total_taxrate = quickpay_getTotalTaxRate($invoice);
     
@@ -531,10 +534,10 @@ function helper_update_subscription($params)
         }
         
 
-    //Create the new subscription
+    /** Create the new subscription */
     $newSubscription = helper_quickpay_request($params['apikey'], '/subscriptions', $newRequest, 'POST'); 
 
-    //Create the new subscription
+    /** Create the new request for the payment link generation */
     $processing_url = $params['continue_url']."&updatedId=".$newSubscription->id;
     $callback_url = '';
 
@@ -567,7 +570,7 @@ function helper_update_subscription($params)
         "shipping_address_selection" => $oldSubscription->link->shipping_address_selection
     ];
 
-
+    /** Get the payment link */
     $payment_link = helper_quickpay_request($params['apikey'], sprintf('subscriptions/%s/link', $newSubscription->id), $request, 'PUT');
 
     /** Save transaction data to custom table */
@@ -575,6 +578,7 @@ function helper_update_subscription($params)
     $pdo->beginTransaction();
 
     try {
+        
         /** Replace old payment link if one already exists */
 
         $pdo->prepare(

@@ -1,17 +1,17 @@
 
 <?php
 /**
+ * HOOK
+ * 
  * Renders the change card button and status message 
  *
- *
  * @return - code to be displayed
- * 
  */
 add_hook('ClientAreaProductDetailsOutput', 1, function ($service) {
     if ($service['service']['product']['paytype'] == 'recurring' && $service['service']['paymentmethod'] == 'quickpay' && $service['service']['domainstatus'] == 'Active') {
         if (isset($_GET["isCardUpdate"])) {
             if (isset($_GET["updatedId"])) {
-                //get card update status
+                /** Get card update status */
                 $query_quickpay_transaction = select_query("quickpay_transactions", "id, transaction_id, paid", ["transaction_id" => $_GET["updatedId"]], "id DESC");
                 $quickpay_transaction = mysql_fetch_array($query_quickpay_transaction);
                 error_log(json_encode($quickpay_transaction));
@@ -30,10 +30,9 @@ add_hook('ClientAreaProductDetailsOutput', 1, function ($service) {
 });
 
 /**
- * Handles the post request 
- *
- *
+ * HOOK
  * 
+ * WHMCS hook that handles the post request 
  */
 add_hook('ClientAreaProductDetails', 1, function ($vars) {
     require_once __DIR__ . '/../gatewayfunctions.php';
@@ -42,6 +41,17 @@ add_hook('ClientAreaProductDetails', 1, function ($vars) {
     }
 });
 
+
+/**
+ * Create HTML Code
+ * 
+ * Creates the HTML Code that has to be displayed acoring to the params
+ * @param string - Message to be displayed in case of change payment request
+ * @param bool - Status of the payment method change request 
+ * @param string - Payment Method 
+ *
+ * @return - code to be displayed
+ */
 function dispay_change_payment($message, $success, $paymentmethod)
 {
     $output = '<div class="card"><div class="card-body"><div class="row">';
@@ -80,6 +90,14 @@ function dispay_change_payment($message, $success, $paymentmethod)
     return $output;
 }
 
+/**
+ * Change card button click handler
+ * 
+ * Gets the payment link of the new subscription and redirects the user to it
+ * @param string - Subscription id of the displayed product
+ * @param string - Service id of the displayed product
+ *
+ */
 function handle_change_card_request($subscriptionId, $serviceId)
 {
     require_once __DIR__ . '/../../init.php';
@@ -97,6 +115,12 @@ function handle_change_card_request($subscriptionId, $serviceId)
     header("Location:" . $url);
 }
 
+
+/**
+ * Get server URL
+ * 
+ * @return string The url of the server that is hosting the app
+ */
 function get_server_url()
 {
     if (isset($_SERVER['HTTPS'])) {

@@ -174,7 +174,7 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
                 if ($operation->type=='authorize') {
                     require_once __DIR__ . '/../../../modules/gateways/quickpay.php';
 
-                    //Check if the request is a card change request
+                    /** Check if the request is a card change request */
                     if($_GET['isUpdate'] == "0")
                     {
                          /** SET subscription id in tblhosting if is empty, in order to enable autobiling and cancel methods*/
@@ -211,16 +211,16 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
                     {
                         if($_GET['isUpdate'] == "1")
                         {
-                            //Get the old subscription id
+                            /** Get the old subscription id */
                             $result = select_query("tblhosting", "id, subscriptionid", ["id" => $recurringData['primaryserviceid']]);
                             $data = mysql_fetch_array($result);  
                             $params = [
                                 'subscriptionID' => $data['subscriptionid'],
                                 'apikey' => $gateway['apikey']];
 
-                            //Cancel the subscripition
+                            /** Cancel the subscripition */
                             quickpay_cancelSubscription($params);
-                            //Update the subscription id
+                            /** Update the subscription id */
                             update_query("tblhosting", ["subscriptionid" => $transid], ["id" => $recurringData['primaryserviceid']]);
 
                         }
