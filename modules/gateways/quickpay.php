@@ -441,6 +441,12 @@ function helper_create_subscription($params)
     return $paymentLink;
 }
 
+/** Update the subscription if the users requests to change card
+ * @param array 
+ *
+ * @return string - the new payment link
+ */
+
 function helper_update_subscription($params)
 {
     //Get old subscription
@@ -452,17 +458,27 @@ function helper_update_subscription($params)
     $invoice_id = $data['invoice_id'];
 
     //Get all the subscriptions associated with the invoice ids
-    $result = select_query("quickpay_transactions", "transaction_id", ["invoice_id" => $invoice_id], "id DESC");
-    $data = mysql_fetch_array($result);
-    if($oldSubscription->id != data['transaction_id'])
-    {
-        //The subscription associated with the in the tblhosting is not the latest so overwrite it
-        $oldSubscription = helper_quickpay_request($params['apikey'], sprintf('subscriptions/%s', $data['transaction_id']), NULL, 'GET');
-
+    $result = select_query("quickpay_transactions", "transaction_id, payment_link", ["invoice_id" => $invoice_id], "id DESC");
+    $transaction_id = 0;
+    while($data = mysql_fetch_array($result)){
+        
+        if(!empty($data['payment_link']))
+        {
+            $transaction_id = $data['transaction_id'];
+            break;
+        }
     }
 
- 
-    //Update order id, so it is unique
+    if($oldSubscription->id != $transaction_id)
+    {
+        //The subscription associated with the in the tblhosting is not the latest so overwrite it
+        $oldSubscription = helper_quickpay_request($params['apikey'], sprintf('subscriptions/%s', $transaction_id), NULL, 'GET');
+    }
+
+    if($oldSubscription->id == NULL){
+        throw new Exception('Failed to change payment method, please try again later'); 
+    }
+    //Update order id, so it is unique *****TODO:Get the last element from explode
     $order_id_arr = explode("-", $oldSubscription->order_id);
     if ($order_id_arr[1] !=NULL)
     {
@@ -517,7 +533,8 @@ function helper_update_subscription($params)
 
     //Create the new subscription
     $newSubscription = helper_quickpay_request($params['apikey'], '/subscriptions', $newRequest, 'POST'); 
-    
+
+    //Create the new subscription
     $processing_url = $params['continue_url']."&updatedId=".$newSubscription->id;
     $callback_url = '';
 
@@ -566,9 +583,6 @@ function helper_update_subscription($params)
             ':transaction_id' => $newSubscription->id,
         ]);
 
-        //Get invoice_id of the old subscription
-
-
 
         /** Insert operation */
         $statement = $pdo->prepare(
@@ -605,7 +619,7 @@ function helper_create_payment_link($paymentId, $params, $type = 'payment')
 {
     $paymentlink = null;
 
-    $params['systemurl'] = "http://a699-2a02-2f0e-315-400-e541-3da1-f441-3891.ngrok.io/";
+    $params['systemurl'] = "https://white-fly-41.loca.lt/";
     /** Quickpay API key */
     $apiKey = $params['apikey'];
 

@@ -174,7 +174,7 @@ if ($checksum === $_SERVER["HTTP_QUICKPAY_CHECKSUM_SHA256"]) {
                 if ($operation->type=='authorize') {
                     require_once __DIR__ . '/../../../modules/gateways/quickpay.php';
 
-
+                    //Check if the request is a card change request
                     if($_GET['isUpdate'] == "0")
                     {
                          /** SET subscription id in tblhosting if is empty, in order to enable autobiling and cancel methods*/

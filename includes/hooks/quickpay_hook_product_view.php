@@ -1,20 +1,27 @@
 
 <?php
-
+/**
+ * Renders the change card button and status message 
+ *
+ *
+ * @return - code to be displayed
+ * 
+ */
 add_hook('ClientAreaProductDetailsOutput', 1, function ($service) {
-    if ($service['service']['product']['paytype'] == 'recurring') {
+    if ($service['service']['product']['paytype'] == 'recurring' && $service['service']['paymentmethod'] == 'quickpay' && $service['service']['domainstatus'] == 'Active') {
         if (isset($_GET["isCardUpdate"])) {
             if (isset($_GET["updatedId"])) {
                 //get card update status
-                $query_quickpay_transaction = select_query("quickpay_transactions", "id, transaction_id, paid", ["transaction_id" => $_GET["updateId"]], "id DESC");
+                $query_quickpay_transaction = select_query("quickpay_transactions", "id, transaction_id, paid", ["transaction_id" => $_GET["updatedId"]], "id DESC");
                 $quickpay_transaction = mysql_fetch_array($query_quickpay_transaction);
+                error_log(json_encode($quickpay_transaction));
                 $card_update_status_message = "Your card has been declined, please try again!";
                 $status = FALSE;
                 if ($quickpay_transaction['paid'] == '1') {
-                    $card_update_status_message = "Your card has been succesfully chWanged for this subscription";
+                    $card_update_status_message = "Your card has been succesfully changed for this subscription";
                     $status = TRUE;
                 }
-                return dispay_change_payment($card_update_status_messzage, $status, $service['service']['paymentmethod']);
+                return dispay_change_payment($card_update_status_message, $status, $service['service']['paymentmethod']);
             }
         }
 
@@ -22,7 +29,12 @@ add_hook('ClientAreaProductDetailsOutput', 1, function ($service) {
     }
 });
 
-
+/**
+ * Handles the post request 
+ *
+ *
+ * 
+ */
 add_hook('ClientAreaProductDetails', 1, function ($vars) {
     require_once __DIR__ . '/../gatewayfunctions.php';
     if (isset($_POST["changeCardFlag"])) {
