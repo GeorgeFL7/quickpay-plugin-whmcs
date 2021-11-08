@@ -623,7 +623,6 @@ function helper_create_payment_link($paymentId, $params, $type = 'payment')
 {
     $paymentlink = null;
 
-    $params['systemurl'] = "https://white-fly-41.loca.lt/";
     /** Quickpay API key */
     $apiKey = $params['apikey'];
 
